@@ -1,6 +1,8 @@
 #ifndef INIT_H
 #define INIT_H
 
+#include "Arduino.h"
+
 void initialiseAll(void);
 void initialiseTriggers(void);
 void setPinMapping(byte boardID);
