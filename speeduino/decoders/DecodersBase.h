@@ -4,6 +4,9 @@
 
 class DecodersBase {
  public:
+
+  virtual void triggerSetup() = 0;
+
   virtual void triggerHandler() = 0;
 
   virtual void triggerSecondaryHandler() = 0;
@@ -15,4 +18,6 @@ class DecodersBase {
   virtual int getCrankAngle() = 0;
 
   virtual void triggerSetEndTeeth() = 0;
+
+  uint16_t triggerToothAngle_;
 };

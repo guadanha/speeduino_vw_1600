@@ -2,7 +2,7 @@
 
 #include "DecodersBase.h"
 
-class MissingTooth : public DecodersBase {
+class DualWell : public DecodersBase {
 public:
 
   auto triggerSetup() -> void override;
