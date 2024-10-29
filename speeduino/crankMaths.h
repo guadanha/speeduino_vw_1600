@@ -62,12 +62,6 @@ static inline int16_t injectorLimits(int16_t angle)
  * Inverse of timeToAngleDegPerMicroSec
 */
 uint32_t angleToTimeMicroSecPerDegree(uint16_t angle);
-
-/** @brief Converts based on the time interval between the 2 most recently detected decoder teeth 
- * 
- * Inverse of timeToAngleIntervalTooth
-*/
-uint32_t angleToTimeIntervalTooth(uint16_t angle);
 ///@}
 
 /**
@@ -83,12 +77,5 @@ uint32_t angleToTimeIntervalTooth(uint16_t angle);
  * Inverse of angleToTimeMicroSecPerDegree
 */
 uint16_t timeToAngleDegPerMicroSec(uint32_t time);
-
-/** @brief Converts based on the time interval between the 2 most recently detected decoder teeth 
- * 
- * Inverse of angleToTimeIntervalTooth
-*/
-uint16_t timeToAngleIntervalTooth(uint32_t time);
-///@}
 
 #endif

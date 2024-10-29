@@ -1,4 +1,10 @@
 #include "DualWell.h"
+#include "globals.h"
+
+#ifdef USE_LIBDIVIDE
+#include "src/libdivide/libdivide.h"
+static libdivide::libdivide_s16_t divTriggerToothAngle;
+#endif
 
 constexpr auto kCamSpeed = 1;
 
@@ -17,26 +23,26 @@ auto DualWell::triggerSetup() -> void {
   if (configPage4.TrigSpeed == kCamSpeed) {
     triggerToothAngle_ = 720 / configPage4.triggerTeeth;
   }  // Account for cam speed
-  toothCurrentCount = 255;  // Default value
-  triggerFilterTime =
+  toothCurrentCount_ = 255;  // Default value
+  triggerFilterTime_ =
       (MICROS_PER_SEC /
        (MAX_RPM / 60U *
         configPage4.triggerTeeth));  // Trigger filter time is the shortest
   // possible time(in uS) that there can be between crank teeth(ie at max RPM)
   //.Any pulses that occur faster than this time will be discarded
   //   as noise
-  triggerSecFilterTime = (MICROS_PER_SEC / (MAX_RPM / 60U * 2U)) / 2U;
+  triggerSecFilterTime_ = (MICROS_PER_SEC / (MAX_RPM / 60U * 2U)) / 2U;
   // Same as above, but fixed at 2 teeth on the secondary input and divided
   // by 2 (for cam speed)
-  BIT_CLEAR(decoderState, BIT_DECODER_2ND_DERIV);
-  BIT_SET(decoderState, BIT_DECODER_IS_SEQUENTIAL);
-  BIT_SET(decoderState, BIT_DECODER_TOOTH_ANG_CORRECT);  // This is always
+  BIT_CLEAR(decoderState_, BIT_DECODER_2ND_DERIV);
+  BIT_SET(decoderState_, BIT_DECODER_IS_SEQUENTIAL);
+  BIT_SET(decoderState_, BIT_DECODER_TOOTH_ANG_CORRECT);  // This is always
   // true for this pattern
-  BIT_SET(decoderState, BIT_DECODER_HAS_SECONDARY);
-  MAX_STALL_TIME = ((MICROS_PER_DEG_1_RPM / 50U) * triggerToothAngle);
+  BIT_SET(decoderState_, BIT_DECODER_HAS_SECONDARY);
+  MAX_STALL_TIME = ((MICROS_PER_DEG_1_RPM / 50U) * triggerToothAngle_);
   // Minimum 50rpm. (3333uS is the time per degree at 50rpm)
 #ifdef USE_LIBDIVIDE
-  divTriggerToothAngle = libdivide::libdivide_s16_gen(triggerToothAngle);
+  divTriggerToothAngle = libdivide::libdivide_s16_gen(triggerToothAngle_);
 #endif
 };
 
