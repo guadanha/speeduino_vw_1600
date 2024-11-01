@@ -20,6 +20,8 @@ A full copy of the license may be found in the projects root directory
 #include "auxiliaries.h"
 #include "utilities.h"
 #include "unit_testing.h"
+#include "DataFilter.h"
+#include "DataFilter.h"
 
 /**
  * @brief A specialist function to map a value in the range [0, 1023] (I.e. 10-bit) to a different range.
@@ -50,8 +52,6 @@ TESTABLE_INLINE_STATIC int16_t fastMap10Bit(uint16_t value, int16_t rangeMin, in
 
 //
 static inline uint16_t readAnalogPin(uint8_t pin) {
-  // Why do we read twice? Who knows.....
-  analogRead(pin);
   // According to the docs, analogRead result should be in range 0-1023
   // Clip the result to zero minimum to prevent rollover just in case
   int tmp = analogRead(pin);
@@ -584,12 +584,14 @@ void readTPS(bool useFilter)
   else { currentStatus.CTPSActive = 0; }
 }
 
+
+
 void readCLT(bool useFilter)
 {
-  uint16_t tempReading = readAnalogSensor(pinCLT);
-  //The use of the filter can be overridden if required. This is used on startup so there can be an immediately accurate coolant value for priming
-  if(useFilter == true) { currentStatus.cltADC = LOW_PASS_FILTER(tempReading, configPage4.ADCFILTER_CLT, currentStatus.cltADC); }
-  else { currentStatus.cltADC = tempReading; }
+  static DataFilter temperature_filter{8};
+
+  temperature_filter.queue_insert_data(readAnalogSensor(pinCLT));
+  currentStatus.cltADC = temperature_filter.queue_median(2);
   
   currentStatus.coolant = table2D_getValue(&cltCalibrationTable, currentStatus.cltADC) - CALIBRATION_TEMPERATURE_OFFSET; //Temperature calibration values are stored as positive bytes. We subtract 40 from them to allow for negative temperatures
 }
