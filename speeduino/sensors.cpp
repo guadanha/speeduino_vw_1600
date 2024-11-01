@@ -19,6 +19,7 @@ A full copy of the license may be found in the projects root directory
 #include "decoders.h"
 #include "auxiliaries.h"
 #include "utilities.h"
+#include "DataFilter.h"
 #include BOARD_H
 
 uint32_t MAPcurRev; //Tracks which revolution we're sampling on
@@ -512,19 +513,24 @@ void readTPS(bool useFilter)
   else { currentStatus.CTPSActive = 0; }
 }
 
+
+
 void readCLT(bool useFilter)
 {
-  unsigned int tempReading;
+  static DataFilter temperature_filter{8};
+
+  //unsigned int tempReading;
   #if defined(ANALOG_ISR)
     tempReading = AnChannel[pinCLT-A0]; //Get the current raw CLT value
   #else
-    tempReading = analogRead(pinCLT);
-    tempReading = analogRead(pinCLT);
+    temperature_filter.queue_insert_data(analogRead(pinCLT));
+    temperature_filter.queue_insert_data(analogRead(pinCLT));
     //tempReading = fastMap1023toX(analogRead(pinCLT), 511); //Get the current raw CLT value
   #endif
   //The use of the filter can be overridden if required. This is used on startup so there can be an immediately accurate coolant value for priming
-  if(useFilter == true) { currentStatus.cltADC = ADC_FILTER(tempReading, configPage4.ADCFILTER_CLT, currentStatus.cltADC); }
-  else { currentStatus.cltADC = tempReading; }
+  // if(useFilter == true) { currentStatus.cltADC = ADC_FILTER(tempReading, configPage4.ADCFILTER_CLT, currentStatus.cltADC); }
+  // else { currentStatus.cltADC = tempReading; }
+  currentStatus.cltADC = temperature_filter.queue_median(2);
   
   currentStatus.coolant = table2D_getValue(&cltCalibrationTable, currentStatus.cltADC) - CALIBRATION_TEMPERATURE_OFFSET; //Temperature calibration values are stored as positive bytes. We subtract 40 from them to allow for negative temperatures
 }
