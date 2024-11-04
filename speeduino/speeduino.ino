@@ -751,23 +751,6 @@ void loop(void)
 
       //Determine the current crank angle
       int crankAngle = injectorLimits(getCrankAngle());
-
-      // if(Serial && false)
-      // {
-      //   if(ignition1StartAngle > crankAngle)
-      //   {
-      //     noInterrupts();
-      //     Serial.print("Time2LastTooth:"); Serial.println(micros()-toothLastToothTime);
-      //     Serial.print("elapsedTime:"); Serial.println(elapsedTime);
-      //     Serial.print("CurAngle:"); Serial.println(crankAngle);
-      //     Serial.print("RPM:"); Serial.println(currentStatus.RPM);
-      //     Serial.print("Tooth:"); Serial.println(toothCurrentCount);
-      //     Serial.print("timePerDegree:"); Serial.println(timePerDegree);
-      //     Serial.print("IGN1Angle:"); Serial.println(ignition1StartAngle);
-      //     Serial.print("TimeToIGN1:"); Serial.println(angleToTime((ignition1StartAngle - crankAngle), CRANKMATH_METHOD_INTERVAL_REV));
-      //     interrupts();
-      //   }
-      // }
       
       //Check for any of the engine protections or rev limiters being turned on
       uint16_t maxAllowedRPM = checkRevLimit(); //The maximum RPM allowed by all the potential limiters (Engine protection, 2-step, flat shift etc). Divided by 100. `checkRevLimit()` returns the current maximum RPM allow (divided by 100) based on either the fixed hard limit or the current coolant temp
