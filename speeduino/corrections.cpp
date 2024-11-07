@@ -31,6 +31,8 @@ There are 2 top level functions that call more detailed corrections for Fuel and
 #include "sensors.h"
 #include "src/PID_v1/PID_v1.h"
 
+#define TPS_READ_FREQUENCY  30 //ONLY VALID VALUES ARE 15 or 30!!!
+
 long PID_O2, PID_output, PID_AFRTarget;
 /** Instance of the PID object in case that algorithm is used (Always instantiated).
 * Needs to be global as it maintains state outside of each function call.

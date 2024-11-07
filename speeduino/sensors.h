@@ -26,8 +26,6 @@
 #define VSS_GEAR_HYSTERESIS 10
 #define VSS_SAMPLES         4 //Must be a power of 2 and smaller than 255
 
-#define TPS_READ_FREQUENCY  30 //ONLY VALID VALUES ARE 15 or 30!!!
-
 extern volatile byte flexCounter;
 extern volatile unsigned long flexStartTime;
 extern volatile unsigned long flexPulseWidth;
@@ -58,7 +56,6 @@ extern unsigned long MAPlast_time; //The time the previous MAP sample was taken
 
 void initialiseADC(void);
 void readTPS(bool useFilter=true); //Allows the option to override the use of the filter
-void readO2_2(void);
 void flexPulse(void);
 uint32_t vssGetPulseGap(byte toothHistoryIndex);
 void vssPulse(void);
@@ -68,7 +65,7 @@ byte getFuelPressure(void);
 byte getOilPressure(void);
 uint16_t readAuxanalog(uint8_t analogPin);
 uint16_t readAuxdigital(uint8_t digitalPin);
-void readCLT(bool useFilter=true); //Allows the option to override the use of the filter
+void readCLT(); //Allows the option to override the use of the filter
 void readIAT(void);
 void readO2(void);
 void readBat(void);
