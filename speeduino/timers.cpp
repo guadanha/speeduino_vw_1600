@@ -161,7 +161,14 @@ void oneMSInterval(void) //Most ARM chips can simply call a function
       TACHO_PULSE_HIGH();
       tachoOutputFlag = TACHO_INACTIVE;
     }
-  } 
+  }
+
+  //200Hz loop
+  if (loop5ms == 5)
+  {
+    loop5ms = 0; //Reset counter
+    BIT_SET(TIMER_mask, BIT_TIMER_200HZ);
+  }  
 
   //30Hz loop
   if (loop33ms == 33)

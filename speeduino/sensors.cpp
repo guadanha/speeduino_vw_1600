@@ -172,9 +172,8 @@ void instanteneousMAPReading(void)
 
   unsigned int tempReading;
   //Instantaneous MAP readings
+  tempReading = analogRead(pinMAP);
 
-  tempReading = analogRead(pinMAP);
-  tempReading = analogRead(pinMAP);
   //Error checking
   if( (tempReading >= VALID_MAP_MAX) || (tempReading <= VALID_MAP_MIN) ) { mapErrorCount += 1; }
   else { mapErrorCount = 0; }
@@ -189,7 +188,6 @@ void instanteneousMAPReading(void)
   //Repeat for EMAP if it's enabled
   if(configPage6.useEMAP == true)
   {
-    tempReading = analogRead(pinEMAP);
     tempReading = analogRead(pinEMAP);
 
     //Error check
@@ -223,7 +221,6 @@ void readMAP(void)
         if( (MAPcurRev == currentStatus.startRevolutions) || ( (MAPcurRev+1) == currentStatus.startRevolutions) ) //2 revolutions are looked at for 4 stroke. 2 stroke not currently catered for.
         {
           tempReading = analogRead(pinMAP);
-          tempReading = analogRead(pinMAP);
 
           //Error check
           if( (tempReading < VALID_MAP_MAX) && (tempReading > VALID_MAP_MIN) )
@@ -238,7 +235,6 @@ void readMAP(void)
           if(configPage6.useEMAP == true)
           {
 
-            tempReading = analogRead(pinEMAP);
             tempReading = analogRead(pinEMAP);
 
             //Error check
@@ -300,7 +296,6 @@ void readMAP(void)
         if( (MAPcurRev == currentStatus.startRevolutions) || ((MAPcurRev+1) == currentStatus.startRevolutions) ) //2 revolutions are looked at for 4 stroke. 2 stroke not currently catered for.
         {
           tempReading = analogRead(pinMAP);
-          tempReading = analogRead(pinMAP);
           // Error check
           if( (tempReading < VALID_MAP_MAX) && (tempReading > VALID_MAP_MIN) )
           {
@@ -338,7 +333,6 @@ void readMAP(void)
       {
         if( (MAPcurRev == ignitionCount) ) //Watch for a change in the ignition counter to determine whether we're still on the same event
         {
-          tempReading = analogRead(pinMAP);
           tempReading = analogRead(pinMAP);
 
           //Error check
@@ -390,7 +384,6 @@ void readMAP(void)
 void readTPS(bool useFilter)
 {
   currentStatus.TPSlast = currentStatus.TPS;
-  analogRead(pinTPS);
   // Get the current raw TPS ADC value and map it into a byte
   byte tempTPS = fastMap1023toX(analogRead(pinTPS), 255);
   // The use of the filter can be overridden if required. This is used on
@@ -431,10 +424,9 @@ void readTPS(bool useFilter)
 }
 
 void readCLT() {
-  static DataFilter temperature_filter{8};
+  static DataFilter temperature_filter{10};
 
   // unsigned int tempReading;
-  temperature_filter.queue_insert_data(analogRead(pinCLT));
   temperature_filter.queue_insert_data(analogRead(pinCLT));
 
   currentStatus.cltADC = temperature_filter.queue_median(2);
@@ -449,7 +441,6 @@ void readCLT() {
 void readIAT(void)
 {
   unsigned int tempReading;
-  tempReading = analogRead(pinIAT);
   tempReading = analogRead(pinIAT);
   currentStatus.iatADC =
       ADC_FILTER(tempReading, configPage4.ADCFILTER_IAT, currentStatus.iatADC);
@@ -512,7 +503,6 @@ void readO2(void)
   if(configPage6.egoType > 0)
   {
     unsigned int tempReading;
-    tempReading = analogRead(pinO2);
     tempReading = analogRead(pinO2);
 
     currentStatus.O2ADC = ADC_FILTER(tempReading, configPage4.ADCFILTER_O2, currentStatus.O2ADC);
@@ -659,45 +649,56 @@ byte getGear(void)
   return tempGear;
 }
 
-byte getFuelPressure(void)
-{
+byte getFuelPressure(void) {
+  if (!configPage10.fuelPressureEnable) {
+    return 0;
+  }
   int16_t tempFuelPressure = 0;
   uint16_t tempReading;
+  // Perform ADC read
+  tempReading = analogRead(pinFuelPressure);
 
-  if(configPage10.fuelPressureEnable > 0)
-  {
-    // Perform ADC read
-    tempReading = analogRead(pinFuelPressure);
-    tempReading = analogRead(pinFuelPressure);
-
-    tempFuelPressure = fastMap10Bit(tempReading, configPage10.fuelPressureMin, configPage10.fuelPressureMax);
-    tempFuelPressure = ADC_FILTER(tempFuelPressure, ADCFILTER_PSI_DEFAULT, currentStatus.fuelPressure); //Apply smoothing factor
-    //Sanity checks
-    if(tempFuelPressure > configPage10.fuelPressureMax) { tempFuelPressure = configPage10.fuelPressureMax; }
-    if(tempFuelPressure < 0 ) { tempFuelPressure = 0; } //prevent negative values, which will cause problems later when the values aren't signed.
+  tempFuelPressure = fastMap10Bit(tempReading, configPage10.fuelPressureMin,
+                                  configPage10.fuelPressureMax);
+  tempFuelPressure =
+      ADC_FILTER(tempFuelPressure, ADCFILTER_PSI_DEFAULT,
+                 currentStatus.fuelPressure);  // Apply smoothing factor
+  // Sanity checks
+  if (tempFuelPressure > configPage10.fuelPressureMax) {
+    tempFuelPressure = configPage10.fuelPressureMax;
   }
+  if (tempFuelPressure < 0) {
+    tempFuelPressure = 0;
+  }  // prevent negative values, which will cause problems later when the values
+     // aren't signed.
 
   return (byte)tempFuelPressure;
 }
 
-byte getOilPressure(void)
-{
+byte getOilPressure(void) {
   int16_t tempOilPressure = 0;
   uint16_t tempReading;
 
-  if(configPage10.oilPressureEnable > 0)
-  {
-    // Perform ADC read
-    tempReading = analogRead(pinOilPressure);
-    tempReading = analogRead(pinOilPressure);
-
-    tempOilPressure = fastMap10Bit(tempReading, configPage10.oilPressureMin, configPage10.oilPressureMax);
-    tempOilPressure = ADC_FILTER(tempOilPressure, ADCFILTER_PSI_DEFAULT, currentStatus.oilPressure); //Apply smoothing factor
-    //Sanity check
-    if(tempOilPressure > configPage10.oilPressureMax) { tempOilPressure = configPage10.oilPressureMax; }
-    if(tempOilPressure < 0 ) { tempOilPressure = 0; } //prevent negative values, which will cause problems later when the values aren't signed.
+  if (!configPage10.oilPressureEnable) {
+    return 0;
   }
 
+  // Perform ADC read
+  tempReading = analogRead(pinOilPressure);
+
+  tempOilPressure = fastMap10Bit(tempReading, configPage10.oilPressureMin,
+                                 configPage10.oilPressureMax);
+  tempOilPressure =
+      ADC_FILTER(tempOilPressure, ADCFILTER_PSI_DEFAULT,
+                 currentStatus.oilPressure);  // Apply smoothing factor
+  // Sanity check
+  if (tempOilPressure > configPage10.oilPressureMax) {
+    tempOilPressure = configPage10.oilPressureMax;
+  }
+  if (tempOilPressure < 0) {
+    tempOilPressure = 0;
+  }  // prevent negative values, which will cause problems later when the values
+     // aren't signed.
 
   return (byte)tempOilPressure;
 }

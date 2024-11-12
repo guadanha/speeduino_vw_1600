@@ -167,6 +167,143 @@ void SerialHandler() {
 #endif
 }
 
+void AuxiliarsInOutHandling() {
+  if (!auxIsEnabled) {
+    return;
+  }
+  // TODO dazq to clean this right up :)
+  // check through the Aux input channels if enabled for Can or local use
+  for (byte AuxinChan = 0; AuxinChan < 16; AuxinChan++) {
+    currentStatus.current_caninchannel = AuxinChan;
+
+    if (((configPage9.caninput_sel[currentStatus.current_caninchannel] & 12) ==
+         4) &&
+        (((configPage9.enable_secondarySerial == 1) &&
+          ((configPage9.enable_intcan == 0) &&
+           (configPage9.intcan_available == 1))) ||
+         ((configPage9.enable_secondarySerial == 1) &&
+          ((configPage9.enable_intcan == 1) &&
+           (configPage9.intcan_available == 1)) &&
+          ((configPage9.caninput_sel[currentStatus.current_caninchannel] &
+            64) == 0)) ||
+         ((configPage9.enable_secondarySerial == 1) &&
+          ((configPage9.enable_intcan == 1) &&
+           (configPage9.intcan_available ==
+            0))))) {  // if current input channel is enabled as external &
+                      // secondary serial enabled & internal can
+                      // disabled(but internal can is available)
+      // or current input channel is enabled as external & secondary serial
+      // enabled & internal can enabled(and internal can is available)
+      // currentStatus.canin[13] = 11;  Dev test use only!
+      if (configPage9.enable_secondarySerial ==
+          1)  // megas only support can via secondary serial
+      {
+        sendCancommand(2, 0, currentStatus.current_caninchannel, 0,
+                       ((configPage9.caninput_source_can_address
+                             [currentStatus.current_caninchannel] &
+                         2047) +
+                        0x100));
+        // send an R command for data from
+        // caninput_source_address[currentStatus.current_caninchannel] from
+        // secondarySerial
+      }
+    } else if (
+        ((configPage9.caninput_sel[currentStatus.current_caninchannel] & 12) ==
+         4) &&
+        (((configPage9.enable_secondarySerial == 1) &&
+          ((configPage9.enable_intcan == 1) &&
+           (configPage9.intcan_available == 1)) &&
+          ((configPage9.caninput_sel[currentStatus.current_caninchannel] &
+            64) == 64)) ||
+         ((configPage9.enable_secondarySerial == 0) &&
+          ((configPage9.enable_intcan == 1) &&
+           (configPage9.intcan_available == 1)) &&
+          ((configPage9.caninput_sel[currentStatus.current_caninchannel] &
+            128) ==
+           128)))) {  // if current input channel is enabled as external for
+                      // canbus & secondary serial enabled & internal can
+                      // enabled(and internal can is available)
+                      //  or current input channel is enabled as external
+                      //  for canbus & secondary serial disabled & internal
+                      //  can enabled(and internal can is available)
+                      // currentStatus.canin[13] = 12;  Dev test use only!
+    } else if ((((configPage9.enable_secondarySerial == 1) ||
+                 ((configPage9.enable_intcan == 1) &&
+                  (configPage9.intcan_available == 1))) &&
+                (configPage9.caninput_sel[currentStatus.current_caninchannel] &
+                 12) == 8) ||
+               (((configPage9.enable_secondarySerial == 0) &&
+                 ((configPage9.enable_intcan == 1) &&
+                  (configPage9.intcan_available == 0))) &&
+                (configPage9.caninput_sel[currentStatus.current_caninchannel] &
+                 3) == 2) ||
+               (((configPage9.enable_secondarySerial == 0) &&
+                 (configPage9.enable_intcan == 0)) &&
+                ((configPage9.caninput_sel[currentStatus.current_caninchannel] &
+                  3) == 2))) {  // if current input channel is enabled as
+                                // analog local pin
+      // read analog channel specified
+      // currentStatus.canin[13] =
+      // (configPage9.Auxinpina[currentStatus.current_caninchannel]&63); Dev
+      // test use only!127
+      currentStatus.canin[currentStatus.current_caninchannel] =
+          readAuxanalog(pinTranslateAnalog(
+              configPage9.Auxinpina[currentStatus.current_caninchannel] & 63));
+    } else if ((((configPage9.enable_secondarySerial == 1) ||
+                 ((configPage9.enable_intcan == 1) &&
+                  (configPage9.intcan_available == 1))) &&
+                (configPage9.caninput_sel[currentStatus.current_caninchannel] &
+                 12) == 12) ||
+               (((configPage9.enable_secondarySerial == 0) &&
+                 ((configPage9.enable_intcan == 1) &&
+                  (configPage9.intcan_available == 0))) &&
+                (configPage9.caninput_sel[currentStatus.current_caninchannel] &
+                 3) == 3) ||
+               (((configPage9.enable_secondarySerial == 0) &&
+                 (configPage9.enable_intcan == 0)) &&
+                ((configPage9.caninput_sel[currentStatus.current_caninchannel] &
+                  3) == 3))) {  // if current input channel is enabled as
+                                // digital local pin
+      // read digital channel specified
+      // currentStatus.canin[14] =
+      // ((configPage9.Auxinpinb[currentStatus.current_caninchannel]&63)+1);
+      // Dev test use only!127+1
+      currentStatus.canin[currentStatus.current_caninchannel] = readAuxdigital(
+          (configPage9.Auxinpinb[currentStatus.current_caninchannel] & 63) + 1);
+    }  // Channel type
+  }  // For loop going through each channel
+}
+
+void Handler1s() {
+  readBaro();  // Infrequent baro readings are not an issue.
+  readBat();
+}
+
+void Handler250ms() {
+  // The IAT and CLT readings can be done less frequently (4 times per second)
+  readCLT();
+  readIAT();
+  nitrousControl();
+
+  currentStatus.fuelPressure = getFuelPressure();
+  currentStatus.oilPressure = getOilPressure();
+
+  AuxiliarsInOutHandling();
+
+  // Lookup the current target idle RPM. This is aligned with coolant and so
+  // needs to be calculated at the same rate CLT is read
+  if ((configPage2.idleAdvEnabled >= 1) ||
+      (configPage6.iacAlgorithm != IAC_ALGORITHM_NONE)) {
+    // All temps are offset by 40 degrees
+    currentStatus.CLIdleTarget = (byte)table2D_getValue(
+        &idleTargetTable,
+        currentStatus.coolant + CALIBRATION_TEMPERATURE_OFFSET);
+    if (BIT_CHECK(currentStatus.airConStatus, BIT_AIRCON_TURNING_ON)) {
+      currentStatus.CLIdleTarget += configPage15.airConIdleUpRPMAdder;
+    }  // Adds Idle Up RPM amount if active
+  }
+}
+
 /** Speeduino main loop.
  * 
  * Main loop chores (roughly in the order that they are performed):
@@ -218,14 +355,30 @@ void loop(void)
   } else {
     EngineStoped();
   }
-  //***Perform sensor reads***
-  //-----------------------------------------------------------------------------------------------------
-  // Every 1ms. NOTE: This is NOT guaranteed to run at
-  // 1kHz on AVR systems. It will run at 1kHz if
-  // possible or as fast as loops/s allows if not.
-  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_1KHZ)) {
-    BIT_CLEAR(TIMER_mask, BIT_TIMER_1KHZ);
-    readMAP();
+
+  // Once per second)
+  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_1HZ)) {
+    BIT_CLEAR(TIMER_mask, BIT_TIMER_1HZ);
+    Handler1s();
+  }  // 1Hz timer
+
+  // 4Hz timer
+  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_4HZ)) {
+    BIT_CLEAR(TIMER_mask, BIT_TIMER_4HZ);
+    Handler250ms();
+  }
+
+  // 10 hertz
+  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_10HZ)) {
+    BIT_CLEAR(TIMER_mask, BIT_TIMER_10HZ);
+    // updateFullStatus();
+    checkProgrammableIO();
+
+    // Air conditioning control
+    airConControl();
+
+    currentStatus.vss = getSpeed();
+    currentStatus.gear = getGear();
   }
 
   // Every 32 loops
@@ -240,24 +393,15 @@ void loop(void)
       BIT_SET(currentStatus.status1, BIT_STATUS1_TOOTHLOG1READY);
     }
   }
-  
-  // 10 hertz
-  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_10HZ)) {
-    BIT_CLEAR(TIMER_mask, BIT_TIMER_10HZ);
-    // updateFullStatus();
-    checkProgrammableIO();
-    idleControl(); // Perform any idle related actions. This needs to be run at
-                   // 10Hz to align with the idle taper resolution of 0.1s
-
-    // Air conditioning control
-    airConControl();
-
-    currentStatus.vss = getSpeed();
-    currentStatus.gear = getGear();
-  }
+   
   // 30 hertz
   if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_30HZ)) {
     BIT_CLEAR(TIMER_mask, BIT_TIMER_30HZ);
+
+    idleControl();  // Perform any idle related actions.
+    // This needs to be run at 10Hz to align with the idle taper resolution of
+    // 0.1s (changed by me, before 10Hz
+
     // Most boost tends to run at about 30Hz, so placing it here ensures a new
     // target time is fetched frequently enough
     boostControl();
@@ -279,13 +423,20 @@ void loop(void)
       writeAllConfig();
     }
   }
-  // 4Hz timer
 
-  // Once per second)
-  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_1HZ)) {
-    BIT_CLEAR(TIMER_mask, BIT_TIMER_1HZ);
-    readBaro();  // Infrequent baro readings are not an issue.
-  }  // 1Hz timer
+  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_200HZ)) {
+    BIT_CLEAR(TIMER_mask, BIT_TIMER_200HZ);
+  }
+
+  //***Perform sensor reads***
+  //-----------------------------------------------------------------------------------------------------
+  // Every 1ms. NOTE: This is NOT guaranteed to run at
+  // 1kHz on AVR systems. It will run at 1kHz if
+  // possible or as fast as loops/s allows if not.
+  if (BIT_CHECK(LOOP_TIMER, BIT_TIMER_1KHZ)) {
+    BIT_CLEAR(TIMER_mask, BIT_TIMER_1KHZ);
+    readMAP();
+  }
 
   if ((configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_OL) ||
       (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_CL) ||
