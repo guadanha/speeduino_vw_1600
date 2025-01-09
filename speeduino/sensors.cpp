@@ -21,7 +21,6 @@ A full copy of the license may be found in the projects root directory
 #include "utilities.h"
 #include "unit_testing.h"
 #include "DataFilter.h"
-#include "DataFilter.h"
 
 /**
  * @brief A specialist function to map a value in the range [0, 1023] (I.e. 10-bit) to a different range.
@@ -589,10 +588,12 @@ void readTPS(bool useFilter)
 void readCLT(bool useFilter)
 {
   static DataFilter temperature_filter{8};
-
-  temperature_filter.queue_insert_data(readAnalogSensor(pinCLT));
-  currentStatus.cltADC = temperature_filter.queue_median(2);
-  
+  if (useFilter == true) {
+    temperature_filter.queue_insert_data(readAnalogSensor(pinCLT));
+    currentStatus.cltADC = temperature_filter.queue_median(2);
+  } else {
+     currentStatus.cltADC = readAnalogSensor(pinCLT);
+  }
   currentStatus.coolant = table2D_getValue(&cltCalibrationTable, currentStatus.cltADC) - CALIBRATION_TEMPERATURE_OFFSET; //Temperature calibration values are stored as positive bytes. We subtract 40 from them to allow for negative temperatures
 }
 
