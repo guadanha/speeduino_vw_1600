@@ -586,10 +586,12 @@ void readTPS(bool useFilter)
 void readCLT(bool useFilter)
 {
   static DataFilter temperature_filter{8};
-
-  temperature_filter.queue_insert_data(readAnalogSensor(pinCLT));
-  currentStatus.cltADC = temperature_filter.queue_median(2);
-  
+  if (useFilter == true) {
+    temperature_filter.queue_insert_data(readAnalogSensor(pinCLT));
+    currentStatus.cltADC = temperature_filter.queue_median(2);
+  } else {
+     currentStatus.cltADC = readAnalogSensor(pinCLT);
+  }
   currentStatus.coolant = table2D_getValue(&cltCalibrationTable, currentStatus.cltADC) - CALIBRATION_TEMPERATURE_OFFSET; //Temperature calibration values are stored as positive bytes. We subtract 40 from them to allow for negative temperatures
 }
 
