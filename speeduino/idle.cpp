@@ -553,7 +553,7 @@ void idleControl(void)
           idle_pwm_target_value = TEMP_idle_pwm_target_value>>2; //increased resolution
           currentStatus.idleLoad = udiv_32_16(idle_pwm_target_value * 100UL, idle_pwm_max_count);
 
-          if (currentStatus.idleLoad == configPage2.iacCLminValue) {
+          if (currentStatus.idleLoad <= (configPage2.iacCLminValue + 2) ) {
             currentStatus.idleLoad = 0;
           }
         }
