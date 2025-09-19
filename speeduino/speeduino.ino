@@ -277,7 +277,7 @@ void __attribute__((always_inline)) loop(void)
       BIT_CLEAR(TIMER_mask, BIT_TIMER_10HZ);
       //updateFullStatus();
       checkProgrammableIO();
-      idleControl(); //Perform any idle related actions. This needs to be run at 10Hz to align with the idle taper resolution of 0.1s
+      //idleControl(); //Perform any idle related actions. This needs to be run at 10Hz to align with the idle taper resolution of 0.1s
       
       // Air conditioning control
       airConControl();
@@ -406,7 +406,8 @@ void __attribute__((always_inline)) loop(void)
 
     if( (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_OL)
     || (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_CL)
-    || (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_OLCL) )
+    || (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_OLCL)
+    || (configPage6.iacAlgorithm == IAC_ALGORITHM_PWM_CL))
     {
       idleControl(); //Run idlecontrol every loop for stepper idle.
     }
