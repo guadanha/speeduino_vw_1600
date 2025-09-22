@@ -214,6 +214,7 @@ void __attribute__((always_inline)) loop(void)
     if(BIT_CHECK(LOOP_TIMER, BIT_TIMER_50HZ)) //50 hertz
     {
       BIT_CLEAR(TIMER_mask, BIT_TIMER_50HZ);
+      idleControl();
 
       #if defined(NATIVE_CAN_AVAILABLE)
       sendCANBroadcast(50);
@@ -401,8 +402,7 @@ void __attribute__((always_inline)) loop(void)
 
     if( (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_OL)
     || (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_CL)
-    || (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_OLCL)
-    || (configPage6.iacAlgorithm == IAC_ALGORITHM_PWM_CL))
+    || (configPage6.iacAlgorithm == IAC_ALGORITHM_STEP_OLCL))
     {
       idleControl(); //Run idlecontrol every loop for stepper idle.
     }
