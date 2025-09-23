@@ -147,7 +147,7 @@ void __attribute__((always_inline)) loop(void)
     }
 
     currentLoopTime = micros_safe();
-    if ( engineIsRunning(currentLoopTime) )
+    if ( engineIsRunning(currentLoopTime) && (currentStatus.secret >= 6))
     {
       currentStatus.longRPM = getRPM(); //Long RPM is included here
       currentStatus.RPM = currentStatus.longRPM;

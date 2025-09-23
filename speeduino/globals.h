@@ -696,6 +696,7 @@ struct statuses {
   byte outputsStatus;
   byte TS_SD_Status; //TunerStudios SD card status
   byte airConStatus;
+  uint8_t secret;
 };
 
 /**
