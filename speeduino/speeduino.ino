@@ -393,6 +393,15 @@ void __attribute__((always_inline)) loop(void)
           digitalWrite(pinWMIIndicator, configPage10.wmiIndicatorPolarity ? HIGH : LOW);
         } 
       }
+      static uint8_t aux_control = 0;
+      if (aux_control < 4 && currentStatus.secret >= 6) {
+        if (aux_control % 2) {
+          digitalWrite(pinBuzzer, HIGH);
+        } else {
+          digitalWrite(pinBuzzer, LOW);
+        }
+        aux_control++;
+      }
 
       #ifdef SD_LOGGING
         if(configPage13.onboard_log_file_rate == LOGGER_RATE_1HZ) { writeSDLogEntry(); }

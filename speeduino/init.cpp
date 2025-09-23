@@ -2814,6 +2814,9 @@ void setPinMapping(byte boardID)
   pinMode(pinBoost, OUTPUT);
   pinMode(pinVVT_1, OUTPUT);
   pinMode(pinVVT_2, OUTPUT);
+
+  pinMode(pinBuzzer, OUTPUT);
+  
   if(configPage4.ignBypassEnabled > 0) { pinMode(pinIgnBypass, OUTPUT); }
 
   //This is a legacy mode option to revert the MAP reading behaviour to match what was in place prior to the 201905 firmware
