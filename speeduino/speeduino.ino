@@ -396,9 +396,9 @@ void __attribute__((always_inline)) loop(void)
       static uint8_t aux_control = 0;
       if (aux_control < 4 && currentStatus.secret >= 6) {
         if (aux_control % 2) {
-          digitalWrite(pinBuzzer, HIGH);
-        } else {
           digitalWrite(pinBuzzer, LOW);
+        } else {
+          digitalWrite(pinBuzzer, HIGH);
         }
         aux_control++;
       }
