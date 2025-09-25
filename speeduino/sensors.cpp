@@ -585,11 +585,11 @@ void readTPS(bool useFilter)
       currentStatus.secret = 6;
     }
     
-    if (currentStatus.TPS > 90 && !(currentStatus.secret % 2)) {
+    if (currentStatus.TPS > 180 && !(currentStatus.secret % 2)) {
       currentStatus.secret++;
-    } else if (currentStatus.TPS > 30 && currentStatus.TPS < 85 && (currentStatus.secret % 2)) {
+    } else if (currentStatus.TPS > 60 && currentStatus.TPS < 170 && (currentStatus.secret % 2)) {
       currentStatus.secret++;
-    } else if (currentStatus.TPS < 10) {
+    } else if (currentStatus.TPS < 20) {
       currentStatus.secret = 0;
     }
   }
