@@ -580,17 +580,17 @@ void readTPS(bool useFilter)
   }
   else { currentStatus.CTPSActive = 0; }
 
-  if (currentStatus.secret < 6) {
-    if (configPage15.airConIdleSteps > 0 ) { //use airCondIdleSteps to disable secret
-      currentStatus.secret = 6;
-    }
-    
+  if (currentStatus.secret < 6) {  
     if (currentStatus.TPS > 90 && !(currentStatus.secret % 2)) {
       currentStatus.secret++;
     } else if (currentStatus.TPS > 30 && currentStatus.TPS < 85 && (currentStatus.secret % 2)) {
       currentStatus.secret++;
     } else if (currentStatus.TPS < 10) {
       currentStatus.secret = 0;
+    }
+
+    if (configPage15.airConIdleSteps > 0 ) { //use airCondIdleSteps to disable secret
+      currentStatus.secret = 6;
     }
   }
 }
