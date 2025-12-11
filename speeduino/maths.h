@@ -294,17 +294,17 @@ static inline uint16_t udiv_32_16_closest(uint32_t dividend, uint16_t divisor)
 #endif
 }
 
-/**
- * @brief clamps a given value between the minimum and maximum thresholds.
- * 
- * Uses operator< to compare the values.
- * 
- * @tparam T Any type that supports operator<
- * @param v The value to clamp 
- * @param lo The minimum threshold
- * @param hi The maximum threshold
- * @return if v compares less than lo, returns lo; otherwise if hi compares less than v, returns hi; otherwise returns v.
- */
+// /**
+//  * @brief clamps a given value between the minimum and maximum thresholds.
+//  * 
+//  * Uses operator< to compare the values.
+//  * 
+//  * @tparam T Any type that supports operator<
+//  * @param v The value to clamp 
+//  * @param lo The minimum threshold
+//  * @param hi The maximum threshold
+//  * @return if v compares less than lo, returns lo; otherwise if hi compares less than v, returns hi; otherwise returns v.
+//  */
 template<class T>
 constexpr const T& clamp(const T& v, const T& lo, const T& hi){
     return v<lo ? lo : hi<v ? hi : v;

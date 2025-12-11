@@ -92,10 +92,10 @@ static inline uint16_t readMAPSensor(uint8_t pin) {
 
 ISR(ADC_vect)
 {
-  byte nChannel = (ADMUX & 0x07);
+  uint8_t nChannel = (ADMUX & 0x07);
 
-  byte result_low = ADCL;
-  byte result_high = ADCH;
+  uint8_t result_low = ADCL;
+  uint8_t result_high = ADCH;
 
   #if defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2561__)
     if (nChannel == 7U) { ADMUX = 0x40; }
@@ -606,7 +606,7 @@ void readCLT(bool useFilter)
   } else {
      currentStatus.cltADC = readAnalogSensor(pinCLT);
   }
-  currentStatus.coolant = table2D_getValue(&cltCalibrationTable, currentStatus.cltADC) - CALIBRATION_TEMPERATURE_OFFSET; //Temperature calibration values are stored as positive bytes. We subtract 40 from them to allow for negative temperatures
+  currentStatus.coolant = table2D_getValue(&cltCalibrationTable, currentStatus.cltADC) - CALIBRATION_TEMPERATURE_OFFSET; //Temperature calibration values are stored as positive uint8_ts. We subtract 40 from them to allow for negative temperatures
 }
 
 void readIAT(void)
@@ -814,9 +814,9 @@ uint16_t getSpeed(void)
   return tempSpeed;
 }
 
-byte getGear(void)
+uint8_t getGear(void)
 {
-  byte tempGear = 0U; //Unknown gear
+  uint8_t tempGear = 0U; //Unknown gear
   if(currentStatus.vss > 0U)
   {
     //If the speed is non-zero, default to the last calculated gear
@@ -838,7 +838,7 @@ byte getGear(void)
   return tempGear;
 }
 
-byte getFuelPressure(void)
+uint8_t getFuelPressure(void)
 {
   int16_t tempFuelPressure = 0;
 
@@ -850,10 +850,10 @@ byte getFuelPressure(void)
     tempFuelPressure = clamp(tempFuelPressure, (int16_t)0, (int16_t)configPage10.fuelPressureMax);
   }
 
-  return (byte)tempFuelPressure;
+  return (uint8_t)tempFuelPressure;
 }
 
-byte getOilPressure(void)
+uint8_t getOilPressure(void)
 {
   int16_t tempOilPressure = 0;
 
@@ -867,7 +867,7 @@ byte getOilPressure(void)
   }
 
 
-  return (byte)tempOilPressure;
+  return (uint8_t)tempOilPressure;
 }
 
 uint8_t getAnalogKnock(void)

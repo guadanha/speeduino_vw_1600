@@ -22,7 +22,7 @@
 
 #define TPS_READ_FREQUENCY  30 //ONLY VALID VALUES ARE 15 or 30!!!
 
-extern volatile byte flexCounter;
+extern volatile uint8_t flexCounter;
 extern volatile uint32_t flexPulseWidth;
 
 #if defined(CORE_AVR)
@@ -38,12 +38,12 @@ void readTPS(bool useFilter=true); //Allows the option to override the use of th
 void readO2_2(void);
 void flexPulse(void);
 void knockPulse(void);
-uint32_t vssGetPulseGap(byte toothHistoryIndex);
+uint32_t vssGetPulseGap(uint8_t toothHistoryIndex);
 void vssPulse(void);
 uint16_t getSpeed(void);
-byte getGear(void);
-byte getFuelPressure(void);
-byte getOilPressure(void);
+uint8_t getGear(void);
+uint8_t getFuelPressure(void);
+uint8_t getOilPressure(void);
 uint16_t readAuxanalog(uint8_t analogPin);
 uint16_t readAuxdigital(uint8_t digitalPin);
 void readCLT(bool useFilter=true); //Allows the option to override the use of the filter

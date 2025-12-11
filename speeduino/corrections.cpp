@@ -264,6 +264,8 @@ uint16_t correctionAccel(void)
   int16_t accelValue = 100;
   int16_t MAP_change = 0;
   int16_t TPS_change = 0;
+  static unsigned long increase_time = 0;
+  static int16_t activate_TPS_change = 0;
 
   if(configPage2.aeMode == AE_MODE_MAP)
   {
@@ -292,6 +294,7 @@ uint16_t correctionAccel(void)
       BIT_CLEAR(currentStatus.engine, BIT_ENGINE_DCC);
       currentStatus.AEamount = 0;
       accelValue = 100;
+      increase_time = 0;
 
       //Reset the relevant DOT value to 0
       if(configPage2.aeMode == AE_MODE_MAP) { currentStatus.mapDOT = 0; }
@@ -310,8 +313,9 @@ uint16_t correctionAccel(void)
         BIT_CLEAR(currentStatus.engine, BIT_ENGINE_ACC);
         BIT_CLEAR(currentStatus.engine, BIT_ENGINE_DCC);
       }
-      else if( (configPage2.aeMode == AE_MODE_TPS) && (abs(currentStatus.tpsDOT) > activateTPSDOT) )
+      else if( (configPage2.aeMode == AE_MODE_TPS) && ((abs(currentStatus.tpsDOT) > activateTPSDOT) || TPS_change > activate_TPS_change) )
       {
+        currentStatus.tpsDOT = activateTPSDOT;
         BIT_CLEAR(currentStatus.engine, BIT_ENGINE_ACC);
         BIT_CLEAR(currentStatus.engine, BIT_ENGINE_DCC);
       }
@@ -392,6 +396,7 @@ uint16_t correctionAccel(void)
       {
         accelValue = 100;
         currentStatus.tpsDOT = 0;
+        increase_time = 0;
       }
       else
       {
@@ -399,7 +404,9 @@ uint16_t correctionAccel(void)
         if (abs(currentStatus.tpsDOT) > configPage2.taeThresh)
         {
           activateTPSDOT = abs(currentStatus.tpsDOT);
-          currentStatus.AEEndTime = micros_safe() + ((unsigned long)configPage2.aeTime * 10000); //Set the time in the future where the enrichment will be turned off. taeTime is stored as mS / 10, so multiply it by 100 to get it in uS
+          activate_TPS_change = TPS_change;
+          increase_time = currentStatus.AEEndTime - micros_safe();
+          currentStatus.AEEndTime = micros_safe() + increase_time + (TPS_change * configPage2.aeTime * 100); //Set the time in the future where the enrichment will be turned off. taeTime is stored as mS / 10, so multiply it by 100 to get it in uS
           //Check if the TPS rate of change is negative or positive. Negative means decelarion.
           if (currentStatus.tpsDOT < 0)
           {
